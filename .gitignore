@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+output/*.csv
+data/CVE-*.json
+data/known_exploited_vulnerabilities.json
+data/epss_scores*.csv
+data/*.gz
+data/*.xz
