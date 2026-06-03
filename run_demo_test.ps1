@@ -1,0 +1,1 @@
+python src/app.py --assets data/sample_asset_list.txt --cve tests/fixtures/CVE-multi-test.json --kev tests/fixtures/known_exploited_vulnerabilities.json --epss tests/fixtures/epss_scores.csv --out output/priority_results.csv
