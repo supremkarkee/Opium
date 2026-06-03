@@ -1,10 +1,11 @@
-.venv/
+# Ignored directories
+cve-translator/data/
+cve-translator/venv/
+
+# Python caches and compiled files
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.pytest_cache/
 .ipynb_checkpoints/
-output/*.csv
-data/CVE-*.json
-data/known_exploited_vulnerabilities.json
-data/epss_scores*.csv
-data/*.gz
-data/*.xz
