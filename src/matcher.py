@@ -4,6 +4,7 @@ from typing import Any
 
 
 def get_cve_id(record: dict) -> str:
+    """Extract CVE ID from a CVE record dict."""
     cve = record.get("cve", {})
 
     if isinstance(cve, dict):
@@ -20,6 +21,7 @@ def get_cve_id(record: dict) -> str:
 
 
 def get_description(record: dict) -> str:
+    """Extract english description from a CVE record dict."""
     cve = record.get("cve", {})
 
     # NVD 2.0 style
@@ -38,6 +40,7 @@ def get_description(record: dict) -> str:
 
 
 def get_cvss_score(record: dict) -> float:
+    """Extract highest available CVSS base score from a CVE record dict."""
     cve = record.get("cve", {})
     metrics = {}
 
@@ -79,7 +82,7 @@ def get_cvss_score(record: dict) -> float:
 
 
 def collect_cpes(obj: Any) -> list[str]:
-    """Recursively collect CPE strings from a CVE record."""
+    """Recursively traverse the CVE record to collect CPE strings."""
     found: list[str] = []
 
     if isinstance(obj, dict):
@@ -98,20 +101,14 @@ def collect_cpes(obj: Any) -> list[str]:
 
 
 def cpe_matches_asset(cpe: str, vendor: str, product: str) -> bool:
-    """
-    Match by CPE vendor/product.
-
-    Example CPE:
-    cpe:2.3:a:google:chrome:...
-    """
+    """Check if vendor/product are specified in a CPE string."""
     needle = f":{vendor}:{product}:".lower()
     return needle in cpe.lower()
 
 
 def match_cves_for_assets(cve_records: list[dict], normalised_assets: list[dict]) -> list[dict]:
-    """Return all CVEs that match at least one normalised asset."""
+    """Find all CVEs that match at least one normalised asset via CPE tags."""
     matches: list[dict] = []
-
     usable_assets = [a for a in normalised_assets if a.get("matched")]
 
     for record in cve_records:
@@ -120,7 +117,6 @@ def match_cves_for_assets(cve_records: list[dict], normalised_assets: list[dict]
             continue
 
         cpes = collect_cpes(record)
-
         if not cpes:
             continue
 

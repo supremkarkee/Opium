@@ -1,85 +1,91 @@
-# CVE-to-My-Stack Translator
+# 🛡️ CVE-to-My-Stack Translator
 
-A 2-hour MVP for the CyberHack "CVE-to-My-Stack Translator" project.
+A premium, lightweight Python CLI tool designed for solo IT administrators and small teams to translate informal asset names into standardized vendor/product CPE keys, map them against CVE entries, and prioritize vulnerability patching using real-world risk signals (CISA KEV and EPSS).
 
-## What it does
+---
 
-This Python CLI tool takes a small asset list, maps informal software names to vendor/product identifiers, searches a local CVE JSON file for matching CPE entries, adds KEV and EPSS information, and produces a prioritised CSV/table for a small IT administrator.
+## ✨ Key Features
 
-## MVP scope
+- **⚡ Fast-Forward Prioritization**: Instead of parsing thousands of vulnerabilities manually, map and prioritize fixes tailored specifically to your software stack.
+- **🔍 Intelligent Software Normalisation**: Leverages fuzzy matching (`rapidfuzz`) to align informal asset names (e.g. `"ms 365"`, `"chrome"`) with official CPE dictionary vendor and product identifiers.
+- **🎯 CPE-Based CVE Matching**: Automatically searches raw NVD 1.1 or 2.0 style CVE JSON datasets, extracting relevant vulnerabilities using CPE tree metrics.
+- **🚦 Composite Risk Ranking**: Computes an action-oriented composite priority score using:
+  - **CISA KEV (Known Exploited Vulnerabilities)** (Highest urgency/confirmed exploitation)
+  - **EPSS (Exploit Prediction Scoring System)** (Likelihood of active exploitation)
+  - **CVSS Score** (Vulnerability severity)
+- **📋 Urgency Categorization**: Classifies results into immediate action buckets: *Fix today*, *Fix this week*, *Review soon*, or *Monitor*.
 
-- Scenario: Solo SMB System Administrator
-- Approach: Python CLI data pipeline
-- No Docker
-- No database
-- Local files only
+---
 
-## Project structure
+## 📁 Clean Project Structure
+
+The project has been streamlined for maximum readability and ease of execution:
 
 ```text
-cve-to-my-stack-translator/
+Opium/
 ├── data/
-│   ├── CVE-2025.json
-│   ├── known_exploited_vulnerabilities.json
-│   ├── epss_scores.csv
-│   └── sample_asset_list.txt
-├── docs/
-│   └── demo_script.md
-├── output/
-│   └── priority_results.csv
-├── src/
-│   ├── app.py
-│   ├── loaders.py
-│   ├── normalisation.py
-│   ├── matcher.py
-│   └── ranker.py
-├── requirements.txt
-├── .gitignore
-└── README.md
+│   ├── sample_asset_list.txt             # Your stack list (informal names, versions)
+│   ├── sample_cve_data.json              # Mock CVE dataset for testing
+│   ├── sample_epss_data.csv              # Mock EPSS scoring data
+│   └── sample_kev_data.json              # Mock CISA KEV listing
+├── src/                                  # Modular logic components
+│   ├── __init__.py
+│   ├── cli.py                            # CLI orchestration and console outputs
+│   ├── loaders.py                        # Data ingestion for JSON, CSV, and asset files
+│   ├── matcher.py                        # CPE scanning and CVE matching
+│   ├── normaliser.py                     # Asset name fuzzy matching dictionary
+│   └── ranker.py                         # Prioritisation ranking and scoring engine
+├── .gitignore                            # Local git configuration
+├── app.py                                # Minimal CLI entrypoint
+├── README.md                             # This documentation
+└── requirements.txt                      # Project package requirements (excluding unused packages)
 ```
 
-## Setup
+---
 
-Create a virtual environment:
+## 🚀 Getting Started
+
+### 1. Setup Virtual Environment
+
+Create a clean virtual environment and install the required dependencies:
 
 ```bash
+# Create virtual environment
 python -m venv .venv
-```
 
-Activate it on Windows PowerShell:
-
-```bash
+# Activate it (Windows PowerShell)
 .\.venv\Scripts\Activate.ps1
-```
 
-Install packages:
+# Activate it (Bash/Mac/Linux)
+source .venv/bin/activate
 
-```bash
+# Install required packages
 pip install -r requirements.txt
 ```
 
-## Run
+### 2. Run the CLI Tool
 
-Put the real hackathon data files into the `data/` folder, then run:
-
-```bash
-python src/app.py --assets data/sample_asset_list.txt --cve data/CVE-2025.json --kev data/known_exploited_vulnerabilities.json --epss data/epss_scores.csv --out output/priority_results.csv
-```
-
-If EPSS is not ready yet, run without it:
+Run the tool out-of-the-box using the provided sample datasets in `data/`:
 
 ```bash
-python src/app.py --assets data/sample_asset_list.txt --cve data/CVE-2025.json --kev data/known_exploited_vulnerabilities.json --out output/priority_results.csv
+python app.py --assets data/sample_asset_list.txt --cve data/sample_cve_data.json --kev data/sample_kev_data.json --epss data/sample_epss_data.csv --out output/priority_results.csv
 ```
 
-## Team roles
+#### Run with only CVE data (no optional inputs):
 
-| Role | Person | Main files |
-|---|---|---|
-| Data loader | Teammate 1 | `loaders.py`, CVE/KEV/EPSS loading |
-| Normalisation | Teammate 2 | `normalisation.py`, product mapping |
-| Output/demo | Teammate 3 | `ranker.py`, `app.py`, README/demo script |
+```bash
+python app.py --assets data/sample_asset_list.txt --cve data/sample_cve_data.json --out output/priority_results.csv
+```
 
-## Demo line
+---
 
-"Alex is the only IT admin for a 40-person accountancy firm. Instead of reading every new CVE, he uploads his asset list. Our tool filters only the CVEs that affect his software and ranks them using KEV, EPSS, and CVSS."
+## 🛠️ Prioritization Logic
+
+Vulnerabilities are ranked using a composite priority score computed as follows:
+
+$$\text{Priority Score} = (\text{is\_KEV} \times 1000) + (\text{EPSS} \times 100) + \text{CVSS}$$
+
+This ensures that:
+1. **Fix Today**: Any vulnerability actively exploited in the wild (CISA KEV) is bumped to the top of the list immediately.
+2. **Fix This Week**: Non-KEV vulnerabilities with very high probability of exploit (EPSS $\ge$ 70%) or critical severity (CVSS $\ge$ 9.0) are addressed next.
+3. **Review Soon / Monitor**: Medium-to-low impact issues are scheduled for standard patch cycles.

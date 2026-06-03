@@ -6,13 +6,20 @@ from pathlib import Path
 
 from tabulate import tabulate
 
-from loaders import load_json, get_cve_records, load_kev_ids, load_epss_scores, load_asset_list
-from matcher import match_cves_for_assets
-from normalisation import normalise_asset_name
-from ranker import rank_matches
+from src.loaders import (
+    get_cve_records,
+    load_asset_list,
+    load_epss_scores,
+    load_json,
+    load_kev_ids,
+)
+from src.matcher import match_cves_for_assets
+from src.normaliser import normalise_asset_name
+from src.ranker import rank_matches
 
 
 def write_csv(rows: list[dict], out_path: str | Path) -> None:
+    """Save ranked vulnerabilities into a CSV file."""
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -43,13 +50,13 @@ def write_csv(rows: list[dict], out_path: str | Path) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="CVE-to-My-Stack Translator MVP")
-    parser.add_argument("--assets", required=True, help="Path to asset list text file")
-    parser.add_argument("--cve", required=True, help="Path to local CVE JSON file")
-    parser.add_argument("--kev", required=False, help="Path to local CISA KEV JSON file")
-    parser.add_argument("--epss", required=False, help="Path to local EPSS CSV file")
+    parser = argparse.ArgumentParser(description="CVE-to-My-Stack Translator CLI Tool")
+    parser.add_argument("--assets", required=True, help="Path to asset list text file (e.g. data/sample_asset_list.txt)")
+    parser.add_argument("--cve", required=True, help="Path to local CVE JSON file (e.g. data/sample_cve_data.json)")
+    parser.add_argument("--kev", required=False, help="Path to local CISA KEV JSON file (e.g. data/sample_kev_data.json)")
+    parser.add_argument("--epss", required=False, help="Path to local EPSS CSV file (e.g. data/sample_epss_data.csv)")
     parser.add_argument("--out", default="output/priority_results.csv", help="Output CSV path")
-    parser.add_argument("--limit", type=int, default=20, help="Number of rows to print")
+    parser.add_argument("--limit", type=int, default=20, help="Number of rows to print in console preview")
     args = parser.parse_args()
 
     print("[1/6] Loading assets...")

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 
 def epss_label(epss: float) -> str:
+    """Convert EPSS score to standard labels."""
     if epss >= 0.70:
         return "high"
     if epss >= 0.30:
@@ -10,6 +11,7 @@ def epss_label(epss: float) -> str:
 
 
 def urgency_bucket(is_kev: bool, epss: float, cvss: float) -> str:
+    """Categorize patch urgency based on KEV status, EPSS, and CVSS score."""
     if is_kev:
         return "Fix today"
     if epss >= 0.70 or cvss >= 9.0:
@@ -20,6 +22,7 @@ def urgency_bucket(is_kev: bool, epss: float, cvss: float) -> str:
 
 
 def plain_english_summary(cve_id: str, asset: str, is_kev: bool, epss: float, cvss: float) -> str:
+    """Generate a clean, plain English explanation of the risk."""
     kev_text = "It is in the KEV catalogue, meaning it has confirmed real-world exploitation." if is_kev else "It is not currently flagged in KEV."
     return (
         f"{cve_id} affects {asset}. CVSS is {cvss:.1f} and EPSS indicates {epss_label(epss)} "
@@ -28,8 +31,8 @@ def plain_english_summary(cve_id: str, asset: str, is_kev: bool, epss: float, cv
 
 
 def rank_matches(matches: list[dict], kev_ids: set[str], epss_scores: dict[str, dict[str, float]]) -> list[dict]:
+    """Sort matched CVEs by a composite priority score derived from KEV, EPSS, and CVSS."""
     ranked: list[dict] = []
-
     seen = set()
 
     for item in matches:
@@ -46,7 +49,7 @@ def rank_matches(matches: list[dict], kev_ids: set[str], epss_scores: dict[str, 
         percentile = float(epss_scores.get(cve_id, {}).get("percentile", 0))
         cvss = float(item.get("cvss", 0))
 
-        # KEV first, then EPSS, then CVSS.
+        # Composite score calculation (KEV weighted highest, then EPSS, then CVSS)
         priority_score = (1000 if is_kev else 0) + (epss * 100) + cvss
 
         result = {
@@ -67,5 +70,7 @@ def rank_matches(matches: list[dict], kev_ids: set[str], epss_scores: dict[str, 
 
         ranked.append(result)
 
+    # Sort descending by priority score
     ranked.sort(key=lambda row: row["priority_score"], reverse=True)
     return ranked
+

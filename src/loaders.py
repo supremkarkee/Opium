@@ -17,11 +17,8 @@ def load_json(path: str | Path) -> Any:
 
 def get_cve_records(raw_json: Any) -> list[dict]:
     """
-    Return a list of CVE records from different possible NVD/FKIE JSON formats.
-    Supports:
-    - {"vulnerabilities": [...]}
-    - {"CVE_Items": [...]}
-    - [ ... ]
+    Extract a list of CVE records from various NVD/FKIE JSON formats.
+    Supports NVD 2.0 (vulnerabilities), NVD 1.1 (CVE_Items), or flat lists.
     """
     if isinstance(raw_json, list):
         return raw_json
@@ -34,12 +31,16 @@ def get_cve_records(raw_json: Any) -> list[dict]:
         if isinstance(raw_json.get("cves"), list):
             return raw_json["cves"]
 
-    raise ValueError("Unsupported CVE JSON structure. Open the JSON and check the top-level keys.")
+    raise ValueError("Unsupported CVE JSON structure. Please check the top-level keys of your JSON.")
 
 
 def load_kev_ids(path: str | Path | None) -> set[str]:
     """Load CISA KEV CVE IDs into a set for fast lookup."""
     if not path:
+        return set()
+
+    path = Path(path)
+    if not path.exists():
         return set()
 
     raw = load_json(path)
@@ -56,10 +57,8 @@ def load_kev_ids(path: str | Path | None) -> set[str]:
 
 def load_epss_scores(path: str | Path | None) -> dict[str, dict[str, float]]:
     """
-    Load EPSS CSV into a dictionary:
-    {
-      "CVE-2025-1234": {"epss": 0.123, "percentile": 0.95}
-    }
+    Load EPSS CSV into a dictionary format:
+    { "CVE-2025-1234": {"epss": 0.123, "percentile": 0.95} }
     """
     if not path:
         return {}
@@ -94,9 +93,8 @@ def load_epss_scores(path: str | Path | None) -> dict[str, dict[str, float]]:
 
 def load_asset_list(path: str | Path) -> list[dict[str, str]]:
     """
-    Load a simple asset list.
-
-    Supported line formats:
+    Load a simple line-based asset list.
+    Supports formats:
     - Google Chrome, Latest
     - OpenSSL, 3.0.7
     - Moodle
